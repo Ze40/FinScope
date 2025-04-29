@@ -1,5 +1,6 @@
-import type { Route } from "./+types/home";
+import type { Route } from "./+types/data";
 
+// eslint-disable-next-line no-empty-pattern
 export function meta({}: Route.MetaArgs) {
   return [
     { title: "New React Router App" },
@@ -7,6 +8,6 @@ export function meta({}: Route.MetaArgs) {
   ];
 }
 
-export default function Home() {
+export default function Data() {
   return <>dajnjwo</>;
 }
