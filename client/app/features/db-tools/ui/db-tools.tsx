@@ -1,4 +1,6 @@
 import { deleteData } from "@/entities/database/api/delete";
+import type { INotice } from "@/features/notice/model/types";
+import { useNoticeStore } from "@/stores/noticeStore";
 
 import * as style from "./style";
 
@@ -10,14 +12,15 @@ interface DbToolsProps {
 }
 
 const DbTools = ({ className, choosen, tableIdField, tableName }: DbToolsProps) => {
+  const { addNotice } = useNoticeStore((state) => state.actions);
   const deleteHandler = async () => {
     try {
       const delRes = await deleteData(choosen[tableIdField], tableName, tableIdField);
-      //   const notice: INotice = {
-      //     label: "Удаление",
-      //     message: `Удаление ${delRes.deletedId} - ${delRes.success ? "прошло успешно" : "не произошло"}`,
-      //   };
-      //   dispatch(addNotice(notice));
+      const notice: INotice = {
+        label: "Удаление",
+        message: `Удаление ${delRes.deletedId} - ${delRes.success ? "прошло успешно" : "не произошло"}`,
+      };
+      addNotice(notice);
     } catch (error) {
       console.error("Delete error:", error);
     }

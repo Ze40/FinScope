@@ -1,3 +1,5 @@
+import { SERVER_URL } from "~/config.env";
+
 interface DeleteResponse {
   success: boolean;
   message?: string;
@@ -14,7 +16,7 @@ export const deleteData = async (
   }
 
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/database/${id}`, {
+    const response = await fetch(`${SERVER_URL}/database/${id}`, {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",
