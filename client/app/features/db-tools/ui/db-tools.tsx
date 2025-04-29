@@ -1,3 +1,5 @@
+import { useNavigate } from "react-router";
+
 import { deleteData } from "@/entities/database/api/delete";
 import type { INotice } from "@/features/notice/model/types";
 import { useNoticeStore } from "@/stores/noticeStore";
@@ -13,6 +15,7 @@ interface DbToolsProps {
 
 const DbTools = ({ className, choosen, tableIdField, tableName }: DbToolsProps) => {
   const { addNotice } = useNoticeStore((state) => state.actions);
+  const navigate = useNavigate(); //Костыль
   const deleteHandler = async () => {
     try {
       const delRes = await deleteData(choosen[tableIdField], tableName, tableIdField);
@@ -21,6 +24,7 @@ const DbTools = ({ className, choosen, tableIdField, tableName }: DbToolsProps) 
         message: `Удаление ${delRes.deletedId} - ${delRes.success ? "прошло успешно" : "не произошло"}`,
       };
       addNotice(notice);
+      navigate(0); //Костыль
     } catch (error) {
       console.error("Delete error:", error);
     }
