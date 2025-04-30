@@ -4,6 +4,7 @@ import Modal from "react-modal";
 import { useNavigate } from "react-router";
 
 import { deleteSomeData } from "@/entities/database/api/delete";
+import { updateData } from "@/entities/database/api/patch";
 import DataForm from "@/features/data-form/ui/data-form";
 import type { INotice } from "@/features/notice/model/types";
 import { useDataStore } from "@/stores/dataStore";
@@ -27,6 +28,14 @@ const DbTools = ({ className }: DbToolsProps) => {
   const [formData, setFormData] = useState<{ [key: string]: string }>();
 
   const [action, setAction] = useState<"edit" | null>(null);
+  const labelRender = () => {
+    switch (action) {
+      case "edit":
+        return "Изменить";
+      default:
+        return "Форма";
+    }
+  };
 
   const deleteHandler = async () => {
     if (selectedData.length === 0) {
@@ -66,10 +75,28 @@ const DbTools = ({ className }: DbToolsProps) => {
   const addHandler = () => {};
   const downloadHandler = () => {};
 
-  // Изменение
   useEffect(() => {
     if (!formData) return;
-
+    // Изменение
+    if (action === "edit") {
+      updateData(tableName, selectedData[0]["id"], formData)
+        .then((data) => {
+          if (data.success) {
+            const notice: INotice = {
+              label: "Изменение",
+              message: `Элемент ${selectedData[0]["id"]} успешно изменен`,
+            };
+            addNotice(notice);
+          }
+        })
+        .catch((err) => {
+          const notice: INotice = {
+            label: "Изменение",
+            message: `При изменении элемента: ${selectedData[0]["id"]} произошла ошибка: ${err}`,
+          };
+          addNotice(notice);
+        });
+    }
     navigate(0);
   }, [formData]);
 
@@ -97,7 +124,7 @@ const DbTools = ({ className }: DbToolsProps) => {
         ariaHideApp={false}
       >
         <DataForm
-          label="Изменить"
+          label={labelRender()}
           onSetData={setFormData}
           tableName={tableName}
           initialData={action === "edit" ? selectedData[0] : undefined}

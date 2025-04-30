@@ -34,9 +34,10 @@ export class DatabaseController {
   @Patch(':id')
   update(
     @Param('id') id: string,
+    @Headers('TableName') tableName: string,
     @Body() updateDatabaseDto: UpdateDatabaseDto,
   ) {
-    return this.databaseService.update(+id, updateDatabaseDto);
+    return this.databaseService.update(tableName, +id, updateDatabaseDto);
   }
 
   // @Delete(':id')

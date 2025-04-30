@@ -13,6 +13,7 @@ export class DatabaseService {
   }
   private pool: Pool;
   private dictionary: { [key: string]: { [key: string]: string } };
+  private reverseDictionary: { [key: string]: { [key: string]: string } };
 
   constructor(configService: ConfigService) {
     const config: PoolConfig = {
@@ -33,6 +34,15 @@ export class DatabaseService {
         indicator_id: 'id показателя',
         city_id: 'id города',
       },
+    };
+
+    function invertObject<T extends Record<string, string>>(obj: T) {
+      return Object.fromEntries(
+        Object.entries(obj).map(([key, value]) => [value, key]),
+      );
+    }
+    this.reverseDictionary = {
+      stat_data: invertObject(this.dictionary['stat_data']),
     };
   }
 
@@ -120,8 +130,46 @@ export class DatabaseService {
     return `This action returns a #${id} database`;
   }
 
-  update(id: number, updateDatabaseDto: UpdateDatabaseDto) {
-    return `This action updates a #${id} database`;
+  async update(
+    tableName: string,
+    id: number,
+    updateDatabaseDto: UpdateDatabaseDto,
+  ): Promise<{ success: boolean; affectedRows?: number }> {
+    console.log('=================================');
+    console.log(tableName, id, updateDatabaseDto);
+    if (!tableName || !id || !updateDatabaseDto) {
+      throw new Error('Invalid input parameters');
+    }
+
+    const client = await this.pool.connect();
+
+    try {
+      // Подготавливаем данные для обновления
+      const setClause = Object.keys(updateDatabaseDto)
+        .map(
+          (key) =>
+            `"${this.reverseDictionary[tableName][key]}" = ${updateDatabaseDto[key]}`,
+        )
+        .join(', ');
+
+      const queryText = `
+        UPDATE "${tableName}"
+        SET ${setClause}
+        WHERE ${this.reverseDictionary[tableName]['id']} = $1
+        RETURNING *;
+      `;
+
+      const result = await client.query(queryText, [id]);
+
+      return {
+        success: true,
+        affectedRows: result.rowCount || 0,
+      };
+    } catch (error) {
+      throw new Error(`Database operation failed: ${error.message}`);
+    } finally {
+      client.release();
+    }
   }
 
   // async remove(id: number, tableName: string, idField: string) {
