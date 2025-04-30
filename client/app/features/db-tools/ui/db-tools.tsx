@@ -1,6 +1,10 @@
+import { useEffect, useState } from "react";
+
+import Modal from "react-modal";
 import { useNavigate } from "react-router";
 
 import { deleteSomeData } from "@/entities/database/api/delete";
+import DataForm from "@/features/data-form/ui/data-form";
 import type { INotice } from "@/features/notice/model/types";
 import { useDataStore } from "@/stores/dataStore";
 import { useNoticeStore } from "@/stores/noticeStore";
@@ -20,8 +24,19 @@ const DbTools = ({ className }: DbToolsProps) => {
   const tableIdField = useDataStore((state) => state.tableIdField);
   const tableName = useDataStore((state) => state.tableName);
   const { clear } = useDataStore((state) => state.actions);
+  const [formData, setFormData] = useState<{ [key: string]: string }>();
+
+  const [action, setAction] = useState<"edit" | null>(null);
 
   const deleteHandler = async () => {
+    if (selectedData.length === 0) {
+      const notice: INotice = {
+        label: "Удаление",
+        message: `Для удаления необходимо выбрать элементы`,
+      };
+      addNotice(notice);
+      return;
+    }
     const dataIds = selectedData.map((data) => `${data["id"]}`);
     try {
       const delRes = await deleteSomeData(dataIds, tableName, tableIdField);
@@ -37,8 +52,26 @@ const DbTools = ({ className }: DbToolsProps) => {
       console.error("Delete error:", error);
     }
   };
+  const editHandler = () => {
+    if (selectedData.length !== 1) {
+      const notice: INotice = {
+        label: "Изменение",
+        message: "Для изменения выберите один элемент",
+      };
+      addNotice(notice);
+      return;
+    }
+    setAction("edit");
+  };
+  const addHandler = () => {};
+  const downloadHandler = () => {};
 
-  const editHandler = () => {};
+  // Изменение
+  useEffect(() => {
+    if (!formData) return;
+
+    navigate(0);
+  }, [formData]);
 
   return (
     <div className={`${style.container()} ${className}`}>
@@ -48,6 +81,28 @@ const DbTools = ({ className }: DbToolsProps) => {
       <button type="button" className={btn()} onClick={editHandler}>
         Изменить
       </button>
+      <button type="button" className={btn()} onClick={addHandler}>
+        Добавить
+      </button>
+      <button type="button" className={btn()} onClick={downloadHandler}>
+        Скачать
+      </button>
+      <Modal
+        isOpen={action !== null}
+        onRequestClose={() => setAction(null)}
+        className={style.modal()}
+        overlayClassName={style.modalOverlay()}
+        shouldCloseOnOverlayClick={true}
+        shouldCloseOnEsc={true}
+        ariaHideApp={false}
+      >
+        <DataForm
+          label="Изменить"
+          onSetData={setFormData}
+          tableName={tableName}
+          initialData={action === "edit" ? selectedData[0] : undefined}
+        />
+      </Modal>
     </div>
   );
 };

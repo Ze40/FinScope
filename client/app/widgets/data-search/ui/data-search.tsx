@@ -19,7 +19,7 @@ const DataSearch = ({ className }: DataSearchProps) => {
   };
 
   return (
-    <div className={`${hstack({ gap: "30px" })} ${className}`}>
+    <div className={`${hstack({ gap: "30px", justifyContent: "space-between" })} ${className}`}>
       <Search className={css({ shadow: "around" })} />
       <Filter
         label="Столбцы"

@@ -21,3 +21,21 @@ export const getData = async ({
     throw error;
   }
 };
+
+export const getFields = async (tableName: string): Promise<string[]> => {
+  try {
+    const response = await fetch(`${SERVER_URL}/database/fields`, {
+      headers: {
+        TableName: tableName,
+      },
+    });
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const fields = await response.json();
+    return fields;
+  } catch (error) {
+    console.error("Failed to fetch database data:", error);
+    throw error;
+  }
+};

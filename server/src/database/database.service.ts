@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Pool, PoolConfig } from 'pg';
@@ -11,6 +12,7 @@ export class DatabaseService {
     throw new Error('Method not implemented.');
   }
   private pool: Pool;
+  private dictionary: { [key: string]: { [key: string]: string } };
 
   constructor(configService: ConfigService) {
     const config: PoolConfig = {
@@ -21,6 +23,17 @@ export class DatabaseService {
       port: configService.getOrThrow('DB_PORT'),
     };
     this.pool = new Pool(config);
+    this.dictionary = {
+      stat_data: {
+        stat_data_id: 'id',
+        year: 'год',
+        production_id: 'id производства',
+        region_id: 'id региона',
+        branch_id: 'id отрасли',
+        indicator_id: 'id показателя',
+        city_id: 'id города',
+      },
+    };
   }
 
   async onModuleInit() {
@@ -52,11 +65,13 @@ export class DatabaseService {
     }
   }
 
-  async getAll(): Promise<any[]> {
+  async getFileds(tableName: string): Promise<string[]> {
     const client = await this.pool.connect();
     try {
-      const result = await client.query('SELECT * FROM goverment');
-      return result.rows;
+      const result = await client.query(`SELECT * FROM ${tableName} LIMIT 1`);
+      return result.fields
+        .map((field) => this.dictionary[tableName][field.name])
+        .filter((field) => field !== 'id');
     } catch (error) {
       console.error('Error executing query:', error);
       throw new Error('Failed to fetch government data');
@@ -73,14 +88,7 @@ export class DatabaseService {
     const client = await this.pool.connect();
     try {
       const dataQuery = `
-      SELECT 
-        year as "год",
-        stat_data_id as "id",
-        production_id as "ID Производства",
-        region_id as "ID Региона",
-        branch_id as "ID Отрасли",
-        indicator_id as "ID Показателя",
-        city_id as "ID Города"
+      SELECT *
       FROM stat_data
       LIMIT $1
       OFFSET $2
@@ -88,8 +96,18 @@ export class DatabaseService {
 
       const dataRes = await client.query(dataQuery, [limit, offset]);
 
-      const fields = dataRes.fields.map((e) => e.name);
-      return { rows: dataRes.rows, fields };
+      const fields = dataRes.fields.map(
+        (e) => this.dictionary['stat_data'][e.name],
+      );
+
+      const rows = dataRes.rows.map((row) => {
+        const newRow = {};
+        for (const key in row) {
+          newRow[this.dictionary['stat_data'][key]] = row[key] as string;
+        }
+        return newRow;
+      });
+      return { rows, fields };
     } catch (error) {
       console.error('Error executing query:', error);
       throw new Error('Failed to fetch government data');

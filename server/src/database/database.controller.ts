@@ -16,9 +16,9 @@ import { UpdateDatabaseDto } from './dto/update-database.dto';
 export class DatabaseController {
   constructor(private readonly databaseService: DatabaseService) {}
 
-  @Get()
-  getAll() {
-    return this.databaseService.getAll();
+  @Get('fields')
+  getFields(@Headers('TableName') tableName: string) {
+    return this.databaseService.getFileds(tableName);
   }
 
   @Get('data')
