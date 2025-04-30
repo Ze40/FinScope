@@ -32,7 +32,7 @@ export const tableHeader = cva({
     position: "sticky",
     top: 0,
     fontSize: "sm",
-    zIndex: "100",
+    zIndex: "10",
   },
 });
 

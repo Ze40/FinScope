@@ -3,7 +3,8 @@ import { useEffect, useRef, useState } from "react";
 import { css } from "~/styled-system/css";
 
 import type { DatabaseData } from "@/entities/database/model/types";
-import { DbTools, type IFilter } from "@/features";
+import type { IFilter } from "@/features";
+import { useDataStore } from "@/stores/dataStore";
 
 import * as style from "./style";
 
@@ -31,7 +32,16 @@ const DataTable = ({
   const [correctFields, setCorrectFields] = useState<string[]>(data?.fields || []);
   const observerRef = useRef<HTMLDivElement>(null);
   const tableContainerRef = useRef<HTMLDivElement>(null);
-  const [choosen, setChoosen] = useState<{ [key: string]: string } | null>(null);
+
+  useDataStore((state) => state.selected);
+  const { isChoosen, toggle, setTableIdField, setTableName } = useDataStore(
+    (state) => state.actions
+  );
+
+  useEffect(() => {
+    setTableIdField(tableIdField);
+    setTableName(tableName);
+  }, []);
 
   useEffect(() => {
     const newFields = filters ? filters.map((filter) => filter.label) : data?.fields || [];
@@ -73,21 +83,16 @@ const DataTable = ({
           {data.rows.map((row) => (
             <tr
               className={style.tableRow({
-                choosen: choosen?.[tableIdField] === row[tableIdField],
+                choosen: isChoosen(row),
               })}
-              key={`${row[tableIdField]}`}
-              onClick={() => setChoosen(choosen?.[tableIdField] === row[tableIdField] ? null : row)}
+              key={`${row["id"]}`}
+              onClick={() => toggle(row)}
             >
               {correctFields.map((name) => (
-                <td className={style.tableCell()} key={`${name}-${row[tableIdField]}`}>
+                <td className={style.tableCell()} key={`${name}-${row["id"]}`}>
                   {row[name] ?? "-"}
                 </td>
               ))}
-              <td className={style.dbTools()}>
-                {choosen?.[tableIdField] === row[tableIdField] && (
-                  <DbTools choosen={choosen} tableIdField={tableIdField} tableName={tableName} />
-                )}
-              </td>
             </tr>
           ))}
         </tbody>

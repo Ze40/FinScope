@@ -3,26 +3,24 @@ import { SERVER_URL } from "~/config.env";
 interface DeleteResponse {
   success: boolean;
   message?: string;
-  deletedId?: string;
+  deletedIds?: string[];
+  errorIds?: string[];
 }
 
-export const deleteData = async (
-  id: string,
+export const deleteSomeData = async (
+  ids: string[],
   tableName: string,
   idField: string
 ): Promise<DeleteResponse> => {
-  if (!id) {
-    throw new Error("ID is required for deletion");
-  }
-
   try {
-    const response = await fetch(`${SERVER_URL}/database/${id}`, {
+    const response = await fetch(`${SERVER_URL}/database/delete-some`, {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",
         TableName: tableName,
-        IdFiled: idField,
+        IdField: idField,
       },
+      body: JSON.stringify({ ids }),
     });
 
     if (!response.ok) {
@@ -33,7 +31,12 @@ export const deleteData = async (
     const result: DeleteResponse = await response.json();
     return result;
   } catch (error) {
-    console.error("Failed to delete data:", error);
-    throw error instanceof Error ? error : new Error("Unknown deletion error");
+    console.error("Failed to delete multiple data:", error);
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : "Unknown deletion error",
+      deletedIds: [],
+      errorIds: ids,
+    };
   }
 };

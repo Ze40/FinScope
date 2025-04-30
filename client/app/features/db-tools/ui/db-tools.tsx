@@ -1,28 +1,36 @@
 import { useNavigate } from "react-router";
 
-import { deleteData } from "@/entities/database/api/delete";
+import { deleteSomeData } from "@/entities/database/api/delete";
 import type { INotice } from "@/features/notice/model/types";
+import { useDataStore } from "@/stores/dataStore";
 import { useNoticeStore } from "@/stores/noticeStore";
+import { btn } from "@/styles/reciepts/components";
 
 import * as style from "./style";
 
 interface DbToolsProps {
   className?: string;
-  choosen: { [key: string]: string };
-  tableIdField: string;
-  tableName: string;
 }
 
-const DbTools = ({ className, choosen, tableIdField, tableName }: DbToolsProps) => {
+const DbTools = ({ className }: DbToolsProps) => {
   const { addNotice } = useNoticeStore((state) => state.actions);
   const navigate = useNavigate(); //Костыль
+
+  const selectedData = useDataStore((state) => state.selected);
+  const tableIdField = useDataStore((state) => state.tableIdField);
+  const tableName = useDataStore((state) => state.tableName);
+  const { clear } = useDataStore((state) => state.actions);
+
   const deleteHandler = async () => {
+    const dataIds = selectedData.map((data) => `${data["id"]}`);
     try {
-      const delRes = await deleteData(choosen[tableIdField], tableName, tableIdField);
+      const delRes = await deleteSomeData(dataIds, tableName, tableIdField);
+      console.log(delRes);
       const notice: INotice = {
         label: "Удаление",
-        message: `Удаление ${delRes.deletedId} - ${delRes.success ? "прошло успешно" : "не произошло"}`,
+        message: `Удаление ${delRes.deletedIds} - ${delRes.success ? "прошло успешно" : "не произошло"}`,
       };
+      clear();
       addNotice(notice);
       navigate(0); //Костыль
     } catch (error) {
@@ -34,10 +42,10 @@ const DbTools = ({ className, choosen, tableIdField, tableName }: DbToolsProps) 
 
   return (
     <div className={`${style.container()} ${className}`}>
-      <button type="button" className={style.btn()} onClick={deleteHandler}>
+      <button type="button" className={btn()} onClick={deleteHandler}>
         Удалить
       </button>
-      <button type="button" className={style.btn()} onClick={editHandler}>
+      <button type="button" className={btn()} onClick={editHandler}>
         Изменить
       </button>
     </div>

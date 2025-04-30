@@ -2,10 +2,14 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Pool, PoolConfig } from 'pg';
 
+import { DeleteMultipleDto, DeleteResponse } from './dto/delete-some.dto';
 import { UpdateDatabaseDto } from './dto/update-database.dto';
 
 @Injectable()
 export class DatabaseService {
+  removeSome(ids: string[], tableName: string, idField: string) {
+    throw new Error('Method not implemented.');
+  }
   private pool: Pool;
 
   constructor(configService: ConfigService) {
@@ -69,7 +73,14 @@ export class DatabaseService {
     const client = await this.pool.connect();
     try {
       const dataQuery = `
-      SELECT *
+      SELECT 
+        year as "год",
+        stat_data_id as "id",
+        production_id as "ID Производства",
+        region_id as "ID Региона",
+        branch_id as "ID Отрасли",
+        indicator_id as "ID Показателя",
+        city_id as "ID Города"
       FROM stat_data
       LIMIT $1
       OFFSET $2
@@ -95,19 +106,80 @@ export class DatabaseService {
     return `This action updates a #${id} database`;
   }
 
-  async remove(id: number, tableName: string, idField: string) {
-    const client = await this.pool.connect();
-    try {
-      const dataQuery = `DELETE FROM ${tableName} WHERE ${idField} = $1`;
-      const result = await client.query(dataQuery, [id]);
-      if (!result) throw Error('Ошибка резудьтата');
+  // async remove(id: number, tableName: string, idField: string) {
+  //   const client = await this.pool.connect();
+  //   try {
+  //     const dataQuery = `DELETE FROM ${tableName} WHERE ${idField} = $1`;
+  //     const result = await client.query(dataQuery, [id]);
+  //     if (!result) throw Error('Ошибка результата');
+  //     return {
+  //       success: true,
+  //       message: 'DELETE IS OK',
+  //       deletedId: id,
+  //     };
+  //   } catch (error) {
+  //     throw new Error(`'${tableName}' ${error}`);
+  //   } finally {
+  //     client.release();
+  //   }
+  // }
+
+  async deleteSome({
+    ids,
+    tableName,
+    idField,
+  }: DeleteMultipleDto): Promise<DeleteResponse> {
+    if (!ids.length) {
       return {
-        success: true,
-        message: 'DELETE IS OK',
-        deletedId: id,
+        success: false,
+        message: 'No IDs provided for deletion',
+        deletedIds: [],
+        errorIds: [],
+      };
+    }
+
+    const client = await this.pool.connect();
+    const deletedIds: string[] = [];
+    const errorIds: string[] = [];
+
+    try {
+      await client.query('BEGIN');
+
+      for (const id of ids) {
+        try {
+          const query = `DELETE FROM ${tableName} WHERE ${idField} = $1`;
+          const result = await client.query(query, [id]);
+
+          if (!result) throw Error('Ошибка результата');
+          if (result.rowCount !== null && result.rowCount > 0) {
+            deletedIds.push(id);
+          } else {
+            errorIds.push(id);
+          }
+        } catch (error) {
+          errorIds.push(id);
+          console.error(`Ошибка удаления ID ${id}:`, error);
+        }
+      }
+      await client.query('COMMIT');
+      return {
+        success: errorIds.length === 0,
+        message:
+          errorIds.length > 0
+            ? `Некоторые элементы не были удалены`
+            : 'Все элементы успешно удалены',
+        deletedIds,
+        errorIds,
       };
     } catch (error) {
-      throw new Error(`Permission denied for table '${tableName}' ${error}`);
+      console.error('Ошибка обмена данных:', error);
+      await client.query('ROLLBACK');
+      return {
+        success: false,
+        message: 'Transaction failed',
+        deletedIds: [],
+        errorIds: ids,
+      };
     } finally {
       client.release();
     }

@@ -1,7 +1,7 @@
 import { css } from "~/styled-system/css";
 import { hstack } from "~/styled-system/patterns";
 
-import { Filter, Search } from "@/features";
+import { DbTools, Filter, Search } from "@/features";
 import type { IFilter } from "@/features";
 import { useFilterStore } from "@/stores";
 
@@ -28,6 +28,7 @@ const DataSearch = ({ className }: DataSearchProps) => {
         onToggle={handleToggle}
         selectedFilters={selectedFilters}
       />
+      <DbTools />
     </div>
   );
 };

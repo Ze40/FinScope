@@ -9,6 +9,7 @@ export const box = cva({
     display: "flex",
     alignItems: "center",
     gap: "10px",
+    transition: "all 0.3s ease",
 
     _hover: {
       scale: "1.1",
@@ -49,6 +50,8 @@ export const list = cva({
     borderRadius: "10px",
     display: "flex",
     alignItems: "start",
+    textAlign: "start",
+    textWrap: "nowrap",
     flexDirection: "column",
     padding: "5px",
     zIndex: 1000,
