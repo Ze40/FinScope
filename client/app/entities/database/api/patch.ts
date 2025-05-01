@@ -19,7 +19,7 @@ export const updateData = async (
     if (!response.ok) throw new Error("Ошибка обновления");
     return await response.json();
   } catch (error) {
-    console.error("Update error:", error);
+    console.error("Ошибка изменения:", error);
     throw error;
   }
 };

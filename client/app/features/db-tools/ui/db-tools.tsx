@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 
 import Modal from "react-modal";
-import { useNavigate } from "react-router";
+import { data, useNavigate } from "react-router";
 
 import { deleteSomeData } from "@/entities/database/api/delete";
 import { updateData } from "@/entities/database/api/patch";
+import { addNewData } from "@/entities/database/api/post";
 import DataForm from "@/features/data-form/ui/data-form";
 import type { INotice } from "@/features/notice/model/types";
 import { useDataStore } from "@/stores/dataStore";
@@ -27,11 +28,13 @@ const DbTools = ({ className }: DbToolsProps) => {
   const { clear } = useDataStore((state) => state.actions);
   const [formData, setFormData] = useState<{ [key: string]: string }>();
 
-  const [action, setAction] = useState<"edit" | null>(null);
+  const [action, setAction] = useState<"edit" | "add" | null>(null);
   const labelRender = () => {
     switch (action) {
       case "edit":
         return "Изменить";
+      case "add":
+        return "Добавить";
       default:
         return "Форма";
     }
@@ -72,7 +75,9 @@ const DbTools = ({ className }: DbToolsProps) => {
     }
     setAction("edit");
   };
-  const addHandler = () => {};
+  const addHandler = () => {
+    setAction("add");
+  };
   const downloadHandler = () => {};
 
   useEffect(() => {
@@ -93,6 +98,25 @@ const DbTools = ({ className }: DbToolsProps) => {
           const notice: INotice = {
             label: "Изменение",
             message: `При изменении элемента: ${selectedData[0]["id"]} произошла ошибка: ${err}`,
+          };
+          addNotice(notice);
+        });
+    }
+
+    if (action === "add") {
+      addNewData(formData, tableName)
+        .then((data) => {
+          const notice: INotice = {
+            label: "Добавление",
+            message: `Добавление элемента произошло успешно`,
+          };
+          addNotice(notice);
+          console.log(data);
+        })
+        .catch((error) => {
+          const notice: INotice = {
+            label: "Добавление",
+            message: `При при добавлении элемента: ${selectedData[0]["id"]} произошла ошибка: ${error}`,
           };
           addNotice(notice);
         });

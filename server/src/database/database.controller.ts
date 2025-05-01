@@ -6,10 +6,12 @@ import {
   Headers,
   Param,
   Patch,
+  Put,
   Query,
 } from '@nestjs/common';
 
 import { DatabaseService } from './database.service';
+import { CreateDatabaseDto } from './dto/create-database.dto';
 import { UpdateDatabaseDto } from './dto/update-database.dto';
 
 @Controller('database')
@@ -40,14 +42,14 @@ export class DatabaseController {
     return this.databaseService.update(tableName, +id, updateDatabaseDto);
   }
 
-  // @Delete(':id')
-  // remove(
-  //   @Param('id') id: string,
-  //   @Headers('TableName') tableName: string,
-  //   @Headers('IdFiled') idField: string,
-  // ) {
-  //   return this.databaseService.remove(+id, tableName, idField);
-  // }
+  @Delete('delete/:id')
+  remove(
+    @Param('id') id: string,
+    @Headers('TableName') tableName: string,
+    @Headers('IdFiled') idField: string,
+  ) {
+    return this.databaseService.remove(+id, tableName, idField);
+  }
 
   @Delete('delete-some')
   removeSome(
@@ -60,5 +62,13 @@ export class DatabaseController {
       tableName: tableName,
       idField: idField,
     });
+  }
+
+  @Put('add')
+  createNewData(
+    @Body() newData: CreateDatabaseDto,
+    @Headers('TableName') tableName: string,
+  ) {
+    return this.databaseService.createNewData(newData, tableName);
   }
 }

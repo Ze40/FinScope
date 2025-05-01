@@ -3,14 +3,15 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Pool, PoolConfig } from 'pg';
 
+import {
+  CreateDatabaseDto,
+  CreateDataResponse,
+} from './dto/create-database.dto';
 import { DeleteMultipleDto, DeleteResponse } from './dto/delete-some.dto';
 import { UpdateDatabaseDto } from './dto/update-database.dto';
 
 @Injectable()
 export class DatabaseService {
-  removeSome(ids: string[], tableName: string, idField: string) {
-    throw new Error('Method not implemented.');
-  }
   private pool: Pool;
   private dictionary: { [key: string]: { [key: string]: string } };
   private reverseDictionary: { [key: string]: { [key: string]: string } };
@@ -135,8 +136,6 @@ export class DatabaseService {
     id: number,
     updateDatabaseDto: UpdateDatabaseDto,
   ): Promise<{ success: boolean; affectedRows?: number }> {
-    console.log('=================================');
-    console.log(tableName, id, updateDatabaseDto);
     if (!tableName || !id || !updateDatabaseDto) {
       throw new Error('Invalid input parameters');
     }
@@ -172,23 +171,23 @@ export class DatabaseService {
     }
   }
 
-  // async remove(id: number, tableName: string, idField: string) {
-  //   const client = await this.pool.connect();
-  //   try {
-  //     const dataQuery = `DELETE FROM ${tableName} WHERE ${idField} = $1`;
-  //     const result = await client.query(dataQuery, [id]);
-  //     if (!result) throw Error('Ошибка результата');
-  //     return {
-  //       success: true,
-  //       message: 'DELETE IS OK',
-  //       deletedId: id,
-  //     };
-  //   } catch (error) {
-  //     throw new Error(`'${tableName}' ${error}`);
-  //   } finally {
-  //     client.release();
-  //   }
-  // }
+  async remove(id: number, tableName: string, idField: string) {
+    const client = await this.pool.connect();
+    try {
+      const dataQuery = `DELETE FROM ${tableName} WHERE ${idField} = $1`;
+      const result = await client.query(dataQuery, [id]);
+      if (!result) throw Error('Ошибка результата');
+      return {
+        success: true,
+        message: 'DELETE IS OK',
+        deletedId: id,
+      };
+    } catch (error) {
+      throw new Error(`'${tableName}' ${error}`);
+    } finally {
+      client.release();
+    }
+  }
 
   async deleteSome({
     ids,
@@ -246,6 +245,32 @@ export class DatabaseService {
         deletedIds: [],
         errorIds: ids,
       };
+    } finally {
+      client.release();
+    }
+  }
+
+  async createNewData(
+    data: CreateDatabaseDto,
+    tableName: string,
+  ): Promise<CreateDataResponse> {
+    const client = await this.pool.connect();
+    try {
+      const fields = Object.keys(data)
+        .map((key) => `${this.reverseDictionary[tableName][key]}`)
+        .join(', ');
+
+      const values = Object.keys(data)
+        .map((key) => `'${data[key]}'`)
+        .join(', ');
+      const query = `INSERT INTO ${tableName} (${fields}) VALUES (${values})`;
+      await client.query(query);
+      return {
+        success: true,
+      };
+    } catch (error) {
+      console.error('Ошибка обмена данных:', error);
+      return { success: false };
     } finally {
       client.release();
     }
