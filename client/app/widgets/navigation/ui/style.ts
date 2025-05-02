@@ -17,7 +17,7 @@ export const container = cva({
   variants: {
     open: {
       true: { width: "300px" },
-      false: { width: "min-content", padding: "30px 10px 0" },
+      false: { width: "80px", padding: "30px 10px 0" },
     },
   },
 });

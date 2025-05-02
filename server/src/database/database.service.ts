@@ -127,8 +127,35 @@ export class DatabaseService {
     }
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} database`;
+  async findOne(id: number, tableName: string) {
+    const client = await this.pool.connect();
+    try {
+      const dataQuery = `
+      SELECT *
+      FROM ${tableName}
+      WHERE ${this.reverseDictionary[tableName]['id']}=$1
+    `;
+
+      const dataRes = await client.query(dataQuery, [id]);
+
+      const fields = dataRes.fields.map(
+        (e) => this.dictionary['stat_data'][e.name],
+      );
+
+      const rows = dataRes.rows.map((row) => {
+        const newRow = {};
+        for (const key in row) {
+          newRow[this.dictionary['stat_data'][key]] = row[key] as string;
+        }
+        return newRow;
+      });
+      return { rows, fields };
+    } catch (error) {
+      console.error('Error executing query:', error);
+      throw new Error('Failed to fetch government data');
+    } finally {
+      client.release();
+    }
   }
 
   async update(

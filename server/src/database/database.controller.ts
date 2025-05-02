@@ -34,8 +34,8 @@ export class DatabaseController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.databaseService.findOne(+id);
+  findOne(@Param('id') id: string, @Headers('TableName') tableName: string) {
+    return this.databaseService.findOne(+id, tableName);
   }
 
   @Patch(':id')

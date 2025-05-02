@@ -1,5 +1,5 @@
 import { Logo } from "@/components";
-import { Notice, Search } from "@/features";
+import { Notice } from "@/features";
 
 import * as style from "./style";
 
@@ -7,7 +7,7 @@ const Header = () => {
   return (
     <header className={style.header()}>
       <Logo />
-      <Search />
+
       <Notice />
     </header>
   );

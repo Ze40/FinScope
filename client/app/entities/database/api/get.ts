@@ -58,3 +58,22 @@ export const getAll = async (tableName: string): Promise<DatabaseData> => {
     throw err;
   }
 };
+
+export const get = async (tableName: string, id: string): Promise<DatabaseData> => {
+  try {
+    const response = await fetch(`${SERVER_URL}/database/${id}`, {
+      method: "GET",
+      headers: {
+        TableName: tableName,
+      },
+    });
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const data: DatabaseData = await response.json();
+    return data;
+  } catch (err) {
+    console.error("Excel download failed:", err);
+    throw err;
+  }
+};

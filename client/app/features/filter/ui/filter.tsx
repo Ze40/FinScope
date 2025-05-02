@@ -2,6 +2,7 @@ import { useState } from "react";
 
 import { Check, ChevronDown } from "lucide-react";
 
+import { useClickOutside } from "@/hooks/click";
 import { text } from "@/styles/reciepts/font";
 
 import type { IFilter } from "../model/types";
@@ -17,9 +18,10 @@ interface FilterProps {
 
 const Filter = ({ label, filters, className, selectedFilters = [], onToggle }: FilterProps) => {
   const [isOpen, setIsOpen] = useState(false);
+  const filterRef = useClickOutside<HTMLDivElement>(() => setIsOpen(false));
 
   return (
-    <div style={{ position: "relative" }}>
+    <div style={{ position: "relative" }} ref={filterRef}>
       <button
         className={`${style.box()} ${className}`}
         onClick={() => setIsOpen(!isOpen)}

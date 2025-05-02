@@ -35,3 +35,34 @@ export const searchInput = cva({
     outline: "none",
   },
 });
+
+export const resultBox = cva({
+  base: {
+    position: "absolute",
+    bottom: "-10px",
+    left: 0,
+    maxHeight: "300px",
+    translate: "auto",
+    y: "100%",
+    padding: "10px",
+    bg: "white",
+    borderRadius: "10px",
+    shadow: "around",
+    zIndex: 1000000,
+  },
+});
+
+export const result = cva({
+  base: {
+    textWrap: "nowrap",
+    padding: "10px",
+    borderRadius: "5px",
+    transitionDuration: "0.2s",
+    cursor: "pointer",
+
+    _hover: {
+      bg: "side",
+      transitionDuration: "0.2s",
+    },
+  },
+});
