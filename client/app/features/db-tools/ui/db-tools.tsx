@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 
 import Modal from "react-modal";
-import { data, useNavigate } from "react-router";
+import { useNavigate } from "react-router";
+import * as XLSX from "xlsx";
 
 import { deleteSomeData } from "@/entities/database/api/delete";
+import { getAll } from "@/entities/database/api/get";
 import { updateData } from "@/entities/database/api/patch";
 import { addNewData } from "@/entities/database/api/post";
 import DataForm from "@/features/data-form/ui/data-form";
@@ -28,7 +30,7 @@ const DbTools = ({ className }: DbToolsProps) => {
   const { clear } = useDataStore((state) => state.actions);
   const [formData, setFormData] = useState<{ [key: string]: string }>();
 
-  const [action, setAction] = useState<"edit" | "add" | null>(null);
+  const [action, setAction] = useState<"edit" | "add" | "download" | null>(null);
   const labelRender = () => {
     switch (action) {
       case "edit":
@@ -78,7 +80,21 @@ const DbTools = ({ className }: DbToolsProps) => {
   const addHandler = () => {
     setAction("add");
   };
-  const downloadHandler = () => {};
+  const downloadHandler = async () => {
+    setAction("download");
+    getAll(tableName).then((data) => {
+      const wb = XLSX.utils.book_new();
+
+      // Преобразуем данные в worksheet
+      const ws = XLSX.utils.json_to_sheet(data.rows);
+
+      // Добавляем worksheet в книгу
+      XLSX.utils.book_append_sheet(wb, ws, "Data");
+
+      // Генерируем файл и скачиваем
+      XLSX.writeFile(wb, `${tableName}.xlsx`);
+    });
+  };
 
   useEffect(() => {
     if (!formData) return;
@@ -105,13 +121,12 @@ const DbTools = ({ className }: DbToolsProps) => {
 
     if (action === "add") {
       addNewData(formData, tableName)
-        .then((data) => {
+        .then(() => {
           const notice: INotice = {
             label: "Добавление",
             message: `Добавление элемента произошло успешно`,
           };
           addNotice(notice);
-          console.log(data);
         })
         .catch((error) => {
           const notice: INotice = {
@@ -120,6 +135,9 @@ const DbTools = ({ className }: DbToolsProps) => {
           };
           addNotice(notice);
         });
+    }
+    if (action === "download") {
+      console.log(1);
     }
     navigate(0);
   }, [formData]);
@@ -139,7 +157,7 @@ const DbTools = ({ className }: DbToolsProps) => {
         Скачать
       </button>
       <Modal
-        isOpen={action !== null}
+        isOpen={action === "add" || action === "edit"}
         onRequestClose={() => setAction(null)}
         className={style.modal()}
         overlayClassName={style.modalOverlay()}
