@@ -4,11 +4,17 @@ import type { DatabaseData } from "../model/types";
 
 export const getData = async ({
   pageParam,
+  tableName,
 }: {
   pageParam: unknown;
+  tableName: string;
 }): Promise<{ data: DatabaseData; nextPage: number }> => {
   try {
-    const response = await fetch(`${SERVER_URL}/database/data?page=${pageParam}&limit=20`);
+    const response = await fetch(`${SERVER_URL}/database/data?page=${pageParam}&limit=20`, {
+      headers: {
+        TableName: tableName,
+      },
+    });
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);

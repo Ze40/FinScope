@@ -29,8 +29,12 @@ export class DatabaseController {
   }
 
   @Get('data')
-  getData(@Query('page') page: number = 1, @Query('limit') limit: number = 20) {
-    return this.databaseService.getData({ page, limit });
+  getData(
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 20,
+    @Headers('TableName') tableName: string,
+  ) {
+    return this.databaseService.getData({ page, limit, tableName });
   }
 
   @Get(':id')

@@ -3,13 +3,11 @@
 import { useEffect, useState } from "react";
 
 import { useFetcher, useLoaderData } from "react-router";
-import { css } from "~/styled-system/css";
 
 import { DataTable } from "@/components";
 import { getData } from "@/entities/database/api/get";
 import type { DatabaseData } from "@/entities/database/model/types";
 import { useFilterStore } from "@/stores";
-import { DataSearch } from "@/widgets";
 
 type PageData = {
   data: DatabaseData;
@@ -17,10 +15,10 @@ type PageData = {
 };
 
 export async function loader() {
-  return await getData({ pageParam: 1, tableName: "stat_data" });
+  return await getData({ pageParam: 1, tableName: "indicator" });
 }
 
-const Data = () => {
+const Indicator = () => {
   const selectedFilters = useFilterStore((state) => state.selectedFilters);
   const { set } = useFilterStore((state) => state.actions);
 
@@ -38,7 +36,7 @@ const Data = () => {
       setError(null);
 
       try {
-        const newPage = await getData({ pageParam: nextPage, tableName: "stat_data" });
+        const newPage = await getData({ pageParam: nextPage, tableName: "indicator" });
         setPages((prev) => [...prev, newPage]);
       } catch (err) {
         setError(err instanceof Error ? err : new Error("Unknown error"));
@@ -71,33 +69,24 @@ const Data = () => {
   };
 
   return (
-    <div
-      className={css({
-        display: "flex",
-        flexDirection: "column",
-        height: "100%",
-        position: "relative",
-      })}
-    >
-      <DataSearch className={css({ marginBottom: "30px" })} />
-
+    <>
       {fetcher.state === "loading" && <div>Загрузка...</div>}
       {fetcher.state === "idle" && pages.length === 0 && <div>Нет данных</div>}
       {error && <div>Ошибка: {error.message}</div>}
       {tableData.rows.length > 0 && (
         <DataTable
-          tableIdField="stat_data_id"
+          tableIdField="indicator_id"
           data={tableData}
-          tableLabel="Статистические данные"
-          tableName="stat_data"
+          tableLabel="Показатели"
+          tableName="indicator"
           filters={selectedFilters}
           onLoadMore={handleLoadMore}
           isLoadingMore={isLoading}
           hasMore={!!pages[pages.length - 1].nextPage}
         />
       )}
-    </div>
+    </>
   );
 };
 
-export default Data;
+export default Indicator;

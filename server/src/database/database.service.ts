@@ -35,6 +35,58 @@ export class DatabaseService {
         indicator_id: 'id показателя',
         city_id: 'id города',
       },
+      goverment: {
+        population: 'население',
+        square: 'площадь',
+        name: 'название',
+        debt: 'долг',
+        budget: 'бюджет',
+        goverment_id: 'id',
+      },
+      region: {
+        population: 'население',
+        square: 'площадь',
+        name: 'название',
+        region_id: 'id',
+        goverment_id: 'id государства',
+      },
+      city: {
+        name: 'название',
+        city_id: 'id',
+        region_id: 'id государства',
+      },
+      indicator: {
+        name: 'название',
+        um: 'единица измерения',
+        value: 'значение',
+        indicator_id: 'id',
+      },
+      production: {
+        name: 'название',
+        wastes: 'траты',
+        revenue: 'прибыль',
+        production_id: 'id',
+      },
+      branch: {
+        name: 'название',
+        count_of_enterpieces: 'колличество производств',
+        branch_id: 'id',
+        production_id: 'id производства',
+      },
+      employee: {
+        first_name: 'Имя',
+        last_name: 'Фамилия',
+        middle_name: 'Отчество',
+        production_id: 'id производства',
+        post_id: 'id должности',
+        employee_id: 'id',
+      },
+      post: {
+        salary: 'зарплата',
+        time: 'время работы',
+        responsibility: 'обязаности',
+        post_id: 'id',
+      },
     };
 
     function invertObject<T extends Record<string, string>>(obj: T) {
@@ -44,6 +96,14 @@ export class DatabaseService {
     }
     this.reverseDictionary = {
       stat_data: invertObject(this.dictionary['stat_data']),
+      goverment: invertObject(this.dictionary['goverment']),
+      region: invertObject(this.dictionary['region']),
+      city: invertObject(this.dictionary['city']),
+      indicator: invertObject(this.dictionary['indicator']),
+      production: invertObject(this.dictionary['production']),
+      branch: invertObject(this.dictionary['branch']),
+      employee: invertObject(this.dictionary['employee']),
+      post: invertObject(this.dictionary['post']),
     };
   }
 
@@ -91,7 +151,15 @@ export class DatabaseService {
     }
   }
 
-  async getData({ page = 1, limit = 20 }: { page: number; limit: number }) {
+  async getData({
+    page = 1,
+    limit = 20,
+    tableName,
+  }: {
+    page: number;
+    limit: number;
+    tableName: string;
+  }) {
     const offset = (page - 1) * limit;
     if (isNaN(page) || isNaN(limit)) {
       throw new BadRequestException('Invalid pagination params');
@@ -100,7 +168,7 @@ export class DatabaseService {
     try {
       const dataQuery = `
       SELECT *
-      FROM stat_data
+      FROM ${tableName}
       LIMIT $1
       OFFSET $2
     `;
@@ -108,13 +176,13 @@ export class DatabaseService {
       const dataRes = await client.query(dataQuery, [limit, offset]);
 
       const fields = dataRes.fields.map(
-        (e) => this.dictionary['stat_data'][e.name],
+        (e) => this.dictionary[tableName][e.name],
       );
 
       const rows = dataRes.rows.map((row) => {
         const newRow = {};
         for (const key in row) {
-          newRow[this.dictionary['stat_data'][key]] = row[key] as string;
+          newRow[this.dictionary[tableName][key]] = row[key] as string;
         }
         return newRow;
       });
@@ -139,13 +207,13 @@ export class DatabaseService {
       const dataRes = await client.query(dataQuery, [id]);
 
       const fields = dataRes.fields.map(
-        (e) => this.dictionary['stat_data'][e.name],
+        (e) => this.dictionary[tableName][e.name],
       );
 
       const rows = dataRes.rows.map((row) => {
         const newRow = {};
         for (const key in row) {
-          newRow[this.dictionary['stat_data'][key]] = row[key] as string;
+          newRow[this.dictionary[tableName][key]] = row[key] as string;
         }
         return newRow;
       });
@@ -314,13 +382,13 @@ export class DatabaseService {
       const dataRes = await client.query(dataQuery);
 
       const fields = dataRes.fields.map(
-        (e) => this.dictionary['stat_data'][e.name],
+        (e) => this.dictionary[tableName][e.name],
       );
 
       const rows = dataRes.rows.map((row) => {
         const newRow = {};
         for (const key in row) {
-          newRow[this.dictionary['stat_data'][key]] = row[key] as string;
+          newRow[this.dictionary[tableName][key]] = row[key] as string;
         }
         return newRow;
       });

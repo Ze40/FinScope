@@ -1,6 +1,7 @@
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
+import * as session from 'express-session';
 
 import { AppModule } from './app.module';
 
@@ -12,6 +13,17 @@ async function bootstrap() {
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true,
+    }),
+  );
+
+  app.use(
+    session({
+      secret: 'your-secret-key', // Замените на свой секретный ключ
+      resave: false,
+      saveUninitialized: false,
+      cookie: {
+        maxAge: 1000 * 60 * 60 * 24, // 1 день
+      },
     }),
   );
 
