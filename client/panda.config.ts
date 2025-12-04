@@ -110,5 +110,5 @@ export default defineConfig({
   },
 
   // The output directory for your css system
-  outdir: "/src/styles/styled-system",
+  outdir: "styled-system",
 });
